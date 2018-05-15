@@ -13365,7 +13365,10 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>回答:</strong></p>
 <p>第一个成分和第二个成分一共表示了0.7068 的方差， 前四个共表示了0.9311.</p>
-<p>零售商和快餐店。第一个成分中Milk,Grocery和Detergents_Paper关联性强，第二个成分显示Fresh、Frozen和Delicatessen关联性强，第三个成分显示Frozen和Delicatessen关联性强，第四个显示Fresh和Delicatessen关联性强。所以Milk,Grocery和Detergents_Paper为一组，通常发生在零售商这类，Fresh、Frozen和Delicatessen为一组，可能为快餐店</p>
+<p>第一个主成分，当第一个主成分的权重为正时，倾向于在Fresh和Frozen上消费，以及不倾向于在 Milk，Grocery和DetergentsPaper上消费；当第一个主成分的权重为负时，则相反。</p>
+<p>第二个主成分，当第二个主成分的权重为正时，对于6个feature都不倾向于消费；当第二个主成分的权重为负时，倾向于在Fresh，Frozen和Delicatessen消费。</p>
+<p>第三个主成分，当第三个主成分的权重为正时，倾向于在Frozen和Delicatessen上消费，以及不倾向于在Fresh和DetergentsPaper上消费；当第三个主成分的权重为负时，则相反。</p>
+<p>第四个主成分，当第四个主成分的权重为正时，倾向于在Frozen和DetergentsPaper上消费，以及不倾向于在Fresh和Delicatessen上消费；当第四个主成分的权重为负时，则相反。</p>
 
 </div>
 </div>
@@ -13682,8 +13685,8 @@ div#notebook {
 <div class="text_cell_render border-box-sizing rendered_html">
 <p><strong>回答:</strong></p>
 <p>K-Means 优点是 原理简单，实现容易，聚类效果中上（依赖K的选择）</p>
-<p>高斯混合模型聚类算法优点是投影后样本点不是得到一个确定的分类标记，而是得到每个类的概率，正态分布的数据预测效果更好。</p>
-<p>选择高斯混合模型聚类算法，因为转换后的特征基本处于正态分布，使用高斯混合模型聚类算法精确度更好</p>
+<p>高斯混合模型聚类算法优点是投影后样本点不是得到一个确定的分类标记，而是得到每个类的概率。</p>
+<p>选择高斯混合模型聚类算法，因为K-Means 通常在聚类分割较为明显的时候工作效率、效果更好，但是当前处理过的数据基本处于正态分布，很难明显分出聚类，而高斯混合模型对正态分布的数据并不敏感，效果更好</p>
 
 </div>
 </div>
