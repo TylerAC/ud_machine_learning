@@ -92,22 +92,22 @@ class Robot(object):
                 return self.valid_actions[random_number]
             else:
                 # TODO 7. Return action with highest q value
-                default_action = 'u'
-                default_value = 0
-                for action, value in self.Qtable[self.state].items():
-                    if value > default_value:
-                        default_value = value
-                        default_action = action
-                return default_action
+                action = None
+                q_value = 0
+                for key, value in self.Qtable[self.state].items():
+                    if value > q_value:
+                        q_value = value
+                        action = key
+                return action
         elif self.testing:
             # TODO 7. choose action with highest q value
-            h_action = 'u'
-            h_value = 0
-            for action, value in self.Qtable[self.state].items():
-                if value > default_value:
-                    h_value = value
-                    h_action = action
-            return default_action
+            action = None
+            q_value = 0
+            for key, value in self.Qtable[self.state].items():
+                if value > q_value:
+                    q_value = value
+                    action = key
+            return action
         else:
             # TODO 6. Return random choose aciton
             random_number = random.randint(0, 3)
@@ -122,9 +122,9 @@ class Robot(object):
             # to the given rules
             # q(st,a)=(1−α)×q(st,a)+α×(Rt+1+γ×maxaq(a,st+1))
             max_q_value = 0
-            for item in self.Qtable[next_state].values():
-                if item > max_q_value:
-                    max_q_value = item
+            for value in self.Qtable[next_state].values():
+                if value > max_q_value:
+                    max_q_value = value
             self.Qtable[self.state][action] = (1 - self.alpha) * self.Qtable[self.state][action] + self.alpha * (r + self.gamma * max_q_value)
 
     def update(self):
