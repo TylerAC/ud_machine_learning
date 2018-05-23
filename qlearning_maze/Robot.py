@@ -68,7 +68,10 @@ class Robot(object):
         if state in self.Qtable.keys():
             pass
         else:
-            self.Qtable.setdefault(state, {action: 0 for action in self.valid_actions})
+            action_values = {}
+            for action in self.valid_actions:
+                action_values[action] = 0
+            self.Qtable[state] = action_values
 
     def choose_action(self):
         """
@@ -85,16 +88,30 @@ class Robot(object):
         if self.learning:
             if is_random_exploration():
                 # TODO 6. Return random choose aciton
-                return(random.choice(self.valid_actions))
+                random_number = random.randint(0, 3)
+                return self.valid_actions[random_number]
             else:
                 # TODO 7. Return action with highest q value
-                return max(self.Qtable[self.state], key=self.Qtable[self.state].get)
+                default_action = 'u'
+                default_value = 0
+                for action, value in self.Qtable[self.state].items():
+                    if value > default_value:
+                        default_value = value
+                        default_action = action
+                return default_action
         elif self.testing:
             # TODO 7. choose action with highest q value
-            return max(self.Qtable[self.state], key=self.Qtable[self.state].get)
+            h_action = 'u'
+            h_value = 0
+            for action, value in self.Qtable[self.state].items():
+                if value > default_value:
+                    h_value = value
+                    h_action = action
+            return default_action
         else:
             # TODO 6. Return random choose aciton
-            return(random.choice(self.valid_actions))
+            random_number = random.randint(0, 3)
+            return self.valid_actions[random_number]
 
     def update_Qtable(self, r, action, next_state):
         """
@@ -103,7 +120,11 @@ class Robot(object):
         if self.learning:
             # TODO 8. When learning, update the q table according
             # to the given rules
-            max_q_value = max(self.Qtable[next_state].values())
+            # q(st,a)=(1−α)×q(st,a)+α×(Rt+1+γ×maxaq(a,st+1))
+            max_q_value = 0
+            for item in self.Qtable[next_state].values():
+                if item > max_q_value:
+                    max_q_value = item
             self.Qtable[self.state][action] = (1 - self.alpha) * self.Qtable[self.state][action] + self.alpha * (r + self.gamma * max_q_value)
 
     def update(self):
