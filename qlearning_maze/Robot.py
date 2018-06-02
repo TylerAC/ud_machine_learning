@@ -65,13 +65,17 @@ class Robot(object):
         # Qtable[state] ={'u':xx, 'd':xx, ...}
         # If Qtable[state] already exits, then do
         # not change it.
-        if state in self.Qtable.keys():
-            pass
-        else:
-            action_values = {}
-            for action in self.valid_actions:
-                action_values[action] = 0
-            self.Qtable[state] = action_values
+
+        # if state in self.Qtable.keys():
+        #     pass
+        # else:
+        #     action_values = {}
+        #     for action in self.valid_actions:
+        #         action_values[action] = 0
+        #     self.Qtable[state] = action_values 
+
+        # change as review : https://review.udacity.com/#!/reviews/1236935
+        self.Qtable.setdefault(state, {a: 0.0 for a in self.valid_actions})
 
     def choose_action(self):
         """
@@ -82,36 +86,55 @@ class Robot(object):
             # TODO 5. Return whether do random choice
             # hint: generate a random number, and compare
             # it with epsilon
-            random_number = random.randint(0, 9)
-            return random_number < 10 * self.epsilon
+
+            # random_number = random.randint(0, 9)
+
+            # change as review : https://review.udacity.com/#!/reviews/1236935
+            random_number = random.random()
+            return random_number < self.epsilon
 
         if self.learning:
             if is_random_exploration():
                 # TODO 6. Return random choose aciton
-                random_number = random.randint(0, 3)
-                return self.valid_actions[random_number]
+
+                # random_number = random.randint(0, 3)
+                # return self.valid_actions[random_number]
+
+                # change as review : https://review.udacity.com/#!/reviews/1236935
+                return random.choice(self.valid_actions)
             else:
                 # TODO 7. Return action with highest q value
-                h_action = list(self.Qtable[self.state].keys())[0]
-                h_value = self.Qtable[self.state][h_action]
-                for key, value in self.Qtable[self.state].items():
-                    if value > h_value:
-                        h_value = value
-                        h_action = key
-                return h_action
+                # h_action = list(self.Qtable[self.state].keys())[0]
+                # h_value = self.Qtable[self.state][h_action]
+                # for key, value in self.Qtable[self.state].items():
+                #     if value > h_value:
+                #         h_value = value
+                #         h_action = key
+                # return h_action
+
+                # change as review : https://review.udacity.com/#!/reviews/1236935
+                return max(self.Qtable[self.state], key=self.Qtable[self.state].get)
+
         elif self.testing:
             # TODO 7. choose action with highest q value
-            h_action = list(self.Qtable[self.state].keys())[0]
-            h_value = self.Qtable[self.state][h_action]
-            for key, value in self.Qtable[self.state].items():
-                if value > h_value:
-                    h_value = value
-                    h_action = key
-            return h_action
+            # h_action = list(self.Qtable[self.state].keys())[0]
+            # h_value = self.Qtable[self.state][h_action]
+            # for key, value in self.Qtable[self.state].items():
+            #     if value > h_value:
+            #         h_value = value
+            #         h_action = key
+            # return h_action
+
+            # change as review : https://review.udacity.com/#!/reviews/1236935
+            return max(self.Qtable[self.state], key=self.Qtable[self.state].get)
+
         else:
             # TODO 6. Return random choose aciton
-            random_number = random.randint(0, 3)
-            return self.valid_actions[random_number]
+            # random_number = random.randint(0, 3)
+            # return self.valid_actions[random_number]
+
+            # change as review : https://review.udacity.com/#!/reviews/1236935
+            return random.choice(self.valid_actions)
 
     def update_Qtable(self, r, action, next_state):
         """
@@ -121,10 +144,15 @@ class Robot(object):
             # TODO 8. When learning, update the q table according
             # to the given rules
             # q(st,a)=(1−α)×q(st,a)+α×(Rt+1+γ×maxaq(a,st+1))
-            max_q_value = list(self.Qtable[next_state].values())[0]
-            for value in self.Qtable[next_state].values():
-                if value > max_q_value:
-                    max_q_value = value
+
+            # max_q_value = list(self.Qtable[next_state].values())[0]
+            # for value in self.Qtable[next_state].values():
+            #     if value > max_q_value:
+            #         max_q_value = value
+
+            # change as review : https://review.udacity.com/#!/reviews/1236935
+            max_q_value = max(self.Qtable[next_state].values())
+
             self.Qtable[self.state][action] = (1 - self.alpha) * self.Qtable[self.state][action] + self.alpha * (r + self.gamma * max_q_value)
 
     def update(self):
