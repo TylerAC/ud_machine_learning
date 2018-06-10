@@ -14463,7 +14463,7 @@ _________________________________________________________________
 <p>其中：
 VGG19_model = Sequential() 为初始化一个Keras 顺序模型</p>
 <p>VGG19_model.add(GlobalAveragePooling2D(input_shape=train_VGG19.shape[1:]))为将train_VGG19最后一层卷积层的输出被直接输入到我们的模型，以全局平均池化层进行特征提取</p>
-<p>VGG19_model.add(Dense(128, activation='relu'))和VGG19_model.add(Dense(133, activation='softmax'))是两个全连接层。作用是将输出的特征变为一维数组，提高特征提取。</p>
+<p>VGG19_model.add(Dense(128, activation='relu'))和VGG19_model.add(Dense(133, activation='softmax'))是两个全连接层，通过非线性激活函数，提高特征提取。</p>
 
 </div>
 </div>
