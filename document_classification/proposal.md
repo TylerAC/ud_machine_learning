@@ -16,19 +16,41 @@ June 16th, 2018
 
 ### 数据或输入
 
-分类的文本数据为经典的[20类新闻包](http://www.qwone.com/~jason/20Newsgroups/)，包含约20000条新闻，较均衡的分成了20类，是较常用的文本分类数据之一。项目中可以通过 `sklearn.datasets.fetch_20newsgroups`方法进行引用，获取数据时通过指定 subset 为 train 或者 test 来指明数据用来训练还是测试，有效且方便训练模型并进行验证。20类新闻包中包含18846个样本数据，其中有11314个训练样本和7532个测试样本，按照交叉验证思想将训练集再拆分出20%验证集进行训练，所以最后为9051个训练集样本，2263个验证集样本和7532个测试集样本。
+分类的文本数据为经典的20类新闻包<sup>[3]</sup>，包含约20000条新闻，较均衡的分成了20类，是较常用的文本分类数据之一。项目中可以通过 `sklearn.datasets.fetch_20newsgroups`方法进行引用，获取数据时通过指定 subset 为 train 或者 test 来指明数据用来训练还是测试，有效且方便训练模型并进行验证。20类新闻包中包含18846个样本数据，其中有11314个训练样本和7532个测试样本，按照交叉验证思想将训练集再拆分出20%验证集进行训练，所以最后为9051个训练集样本，2263个验证集样本和7532个测试集样本。
 
-每个样本特征中包含作者、主题、组织和行数等头部信息，以及引用和正文信息，最后包含作者信息。标签则为对应类别的序号。
+每个样本特征中包含作者、主题、组织和行数等头部信息，以及引用和正文信息，最后包含作者信息。标签则为对应类别的序号,如下图所示:
 
-样本类别包含alt.atheism、comp.graphics和comp.os.ms-windows.misc等20个类别。
+![](imgs/feature.png)
+
+样本类别包含alt.atheism、comp.graphics和comp.os.ms-windows.misc等20个类别，训练集中样本分布如下：
+
+![](imgs/train.png)
+
+验证集中样本分布如下：
+
+![](imgs/val.png)
+
+测试集中样本分布如下：
+
+![](imgs/test.png)
+
+由上图可见，每个数据集中类别分布较为均匀，alt.atheism和talk.religion.misc稍微较少。并且训练、验证和测试集中类别分布也较为相似，对训练后测试影响较小。
+
+新闻数据长度分布如下，大部分少于15000个字符：
+
+![](imgs/chars.png)
+
+新闻数据词频分布如下，大部分少于2000个单词：
+
+![](imgs/words.png)
 
 ### 解决方法描述
 
-本文将基于Word2Vec模型分析并表示样本数据中的每篇文章，然后作为输入向量，选取合适的分类模型对文本分类，并优化模型并分析其稳健性。分类模型主要包括决策树模型、支持矢量机(SVM)模型、朴素贝叶斯模型和神经网络模型textcnn<sup>[3]</sup>，将从这些分类模型中选取合适的模型进行训练并验证。
+本文将基于Word2Vec模型分析并表示样本数据中的每篇文章，然后作为输入向量，选取合适的分类模型对文本分类，并优化模型并分析其稳健性。分类模型主要包括决策树模型、支持矢量机(SVM)模型、朴素贝叶斯模型和神经网络模型textcnn<sup>[4]</sup>，将从这些分类模型中选取合适的模型进行训练并验证。
 
 ### 基准模型
 
-本文将以Bag-of-words模型(BOW)和TF-IDF作为基准文本表示模型。BOW模型对于一个文本分析时，会忽略其中的语法和词序，将其分割并建立一个词集。TF-IDF会在解析出word在文档中出现的频率高低。文章<sup>[4]</sup>中基于BOW和TF-IDF对20newsgroups分析时结合SVM准确率约为87.15%和88.1%,本文将以此作为对比。
+本文将以Bag-of-words模型(BOW)和TF-IDF作为基准文本表示模型。BOW模型对于一个文本分析时，会忽略其中的语法和词序，将其分割并建立一个词集。TF-IDF会在解析出word在文档中出现的频率高低。文章<sup>[5]</sup>中基于BOW和TF-IDF对20newsgroups分析时结合SVM准确率约为87.15%和88.1%,本文将以此作为对比。
 
 ### 评估标准
 
@@ -44,7 +66,7 @@ $$ accuracy = \frac{TP + TN}{TP + TN + FP +FN} $$
 
 2.数据处理。检查数据集类别分布情况，进行平衡。去除异常样本。去除冗余字段。
 
-3.通过BOW,TF-IDF和Word2Vec对数据进行提取，提供给机器学习模型进行训练。
+3.通过gensim.models.word2vec<sup>[6]</sup>对text8<sup>[7]</sup>进行训练，得到word2vec词向量模型并提供给机器学习模型进行训练，并在之后与BOW和TF-IDF进行对比。
 
 4.利用机器学习模型决策树模型、支持矢量机(SVM)模型、朴素贝叶斯模型和textcnn进行训练，并对训练模型通过参数优化，并进行对比分析。
 
@@ -53,11 +75,18 @@ $$ accuracy = \frac{TP + TN}{TP + TN + FP +FN} $$
 
 
 ### 参考文献
+
 [1]	 https://zh.wikipedia.org/wiki/自然语言处理
 
 [2]	 https://github.com/nd009/capstone/tree/master/document_classification
 
-[3] https://link.springer.com/chapter/10.1007/978-3-319-25207-0_14
+[3]	 http://www.qwone.com/~jason/20Newsgroups/
 
-[4] https://dl.acm.org/citation.cfm?id=2390688
+[4] https://link.springer.com/chapter/10.1007/978-3-319-25207-0_14
+
+[5] https://dl.acm.org/citation.cfm?id=2390688
+
+[6] https://radimrehurek.com/gensim/models/word2vec.html
+
+[7] http://mattmahoney.net/dc/text8.zip
 
