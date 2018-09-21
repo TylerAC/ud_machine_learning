@@ -1,3 +1,9 @@
 
 dog-project/bottleneck_features/DogVGG19Data.npz
 document_classification/20news-bydate_py3.pkz
+document_classification/data/w2c/text8
+document_classification/data/gvc/glove.6B.100d.txt
+document_classification/data/gvc/glove.6B.200d.txt
+document_classification/data/gvc/glove.6B.300d.txt
+document_classification/data/gvc/glove.6B.50d.txt
+document_classification/data/gvc/glovec_model.txt
