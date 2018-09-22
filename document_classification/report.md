@@ -23,7 +23,7 @@
 
 本文中中选取合适的文本表示模型和机器学习分类模型进行训练，完成后分别计算各自的准确率进行性能评估，验证Word2Vec是否确实改善了本文分析推理。
 
-$$ accuracy = \frac{TP + TN}{TP + TN + FP +FN} $$
+$$ accuracy = \frac{正确样本数}{样本总数} $$
 
 准确性可以有效的反映出BOW和Word2Vec模型在表示样本数据的性能，可以满足本文想验证词向量模型在表达分析问题上是否使准确性提升的需求。
 
@@ -65,11 +65,31 @@ $$ accuracy = \frac{TP + TN}{TP + TN + FP +FN} $$
 ###2.3 算法和技术
 本文中文本表示模型中以词袋模型BOW为基准模型，并加权词频TF-IDF向量，在文本预处理中，选择出现个数大于2，频率小于0.95的词建立词袋模型。而词向量模型选择Word2Vec来表示每篇文章，Word2Vec中将借助text8训练集来建立文本表示模型。
 
-机器学习模型中，由于词袋模型无法难以表达文本中词之间的关联性，适用于传统机器学习模型，但不适合text-cnn模型。而Word2Vec可以用维数较少的向量表达词以及词之间的关联性，适用于text-cnn模型，但由于维度差异的存在，不适用于机器学习模型。因此将通过决策树模型、支持矢量机(SVM)模型和朴素贝叶斯模型对BOW并加权词频TF-IDF<sup>[7]</sup>向量后输出的数据进行训练。而通过text-cnn<sup>[8]</sup>模型训练Word2Vec输出的数据。
+对于在某一特定文件里的词语 t<sub>i</sub>来说, 它的TF-IDF计算公式<sup>[7]</sup>如下所示：
+
+![](imgs/if01.png)
+
+![](imgs/if02.png)
+
+![](imgs/if03.png)
+
+其中中n<sub>i,j</sub>是该词在文件 d<sub>j</sub>中的出现次数,D为训练集中的文件总数。
+
+word2vec包含两种计算方法skip-gram和cbow<sup>[8]</sup>，Skip-Gram是给定input word来预测上下文。而CBOW是给定上下文，来预测input word。如下图所示：
+
+![](imgs/cbowandskip_gram.png)
+
+本文在建立word2vec时，使用默认值0，即cbow计算方式。
+
+机器学习模型中，由于词袋模型无法难以表达文本中词之间的关联性，适用于传统机器学习模型，但不适合text-cnn模型。而Word2Vec可以用维数较少的向量表达词以及词之间的关联性，适用于text-cnn模型，但由于维度差异的存在，不适用于机器学习模型。因此将通过决策树模型、支持矢量机(SVM)模型和朴素贝叶斯模型对BOW并加权词频TF-IDF<sup>[9]</sup>向量后输出的数据进行训练。而通过text-cnn模型训练Word2Vec输出的数据。
+
+text-cnn模型<sup>[10]</sup>是利用卷积神经网络对文本进行分类的算法, 分为嵌入层
+，卷积层，池化层和全连接层，实现样本的局部特征提取，从而提高识别率，如下图所示：
+![](imgs/text_cnn_model.png)
 
 
 ###2.4 基准模型
-本文将以Bag-of-words模型(BOW)作为基准文本表示模型。BOW模型对于一个文本分析时，会忽略其中的语法和词序，将其分割并建立一个词集。文章<sup>[8]</sup>中基于BOW对20newsgroups分析时结合SVM准确率约为87.15%,本文将以此作为对比。
+本文将以Bag-of-words模型(BOW)作为基准文本表示模型。BOW模型对于一个文本分析时，会忽略其中的语法和词序，将其分割并建立一个词集。文章<sup>[11]</sup>中基于BOW对20newsgroups分析时结合SVM准确率约为82.1%,本文将以此作为对比。
 
 ##3 方法
 ###3.1 数据预处理
@@ -91,7 +111,7 @@ $$ accuracy = \frac{TP + TN}{TP + TN + FP +FN} $$
 ###3.2 执行过程
 执行过程中主要需要:
 
-1）通过sklearn中DecisionTreeClassifier，SVC和MultinomialNB分别对TF-IDF建立表示的数据集进行训练，训练时需要将训练集，验证集和测试集分开处理，并记录结果，如下图所示。同时选择这个模型中最优的参数组合使得训练结果最优，因此借助GridSearchCV工具来进行训练。
+1）通过sklearn中DecisionTreeClassifier，SVC和MultinomialNB分别对TF-IDF建立表示的数据集进行训练，其中DecisionTreeClassifier设置random_state=0，其余为默认值，SVC设置kernel为linear，random_state=0，而MultinomialNB则使用默认值。训练时需要将训练集，验证集和测试集分开处理，并记录结果，如下图所示。
 
 ![](imgs/td_rt.png)
 
@@ -99,32 +119,39 @@ $$ accuracy = \frac{TP + TN}{TP + TN + FP +FN} $$
 
 ![](imgs/text_cnn.png)
 
-训练过程中发现由于训练集较大，在借助GridSearchCV对SVC训练时所需时间较长，因此借助于cpu_count来进行多核运算，提高效率。
+text_cnn训练时选择epochs为15，batch_size为128。
+
+训练过程中发现由于训练集较大，对SVC训练时所需时间较长，因此借助于cpu_count来进行多核运算，提高效率。
 
 ###3.3 完善
-在进行对TF-IDF建立的数据集训练时，本文先借助机器学习默认参数对数据集进行训练，然后借助与GridSearchCV进行参数优化。如下图所示，由于训练的不稳定型，决策树模型在优化后确出现了准确率下降，不过SVC和NaiveBayes整体上仍处于被优化状态。并且SVC显示出准确率更好。
+在进行对TF-IDF建立的数据集训练时，本文先借助机器学习默认参数对数据集进行训练，然后借助与GridSearchCV进行参数优化。同时加入卡方检验，筛选出对结果影响更重要的特征，使得TFIDF作输入的模型效果可能会提高。
+
+优化后SVM的DecisionTreeClassifier的参数为max_depth为100；SVC的参数为kernel是‘linear’，同时设置C为3；MultinomialNB的参数为alpha是0.0001。
+
+如下图所示，由于训练的不稳定型，决策树模型在优化后确出现了准确率稍微下降，不过SVC和NaiveBayes整体上仍处于被优化状态。并且SVC显示出准确率更好。
 
 | 模型 | 优化前训练acc| 优化前验证acc | 优化后训练acc | 优化后验证acc |
 | ------  | ------ | ------ | ------ | ------ |
-| DecisionTreeClassifier | 0.9998895149707214 | 0.6451612903225806 |  0.8809053700295849 |0.6228566377938837|
-| SVC | 0.9938128383604021| 0.9151568714096332 | 0.9992486986939868 |0.9065759236344352|
-| MultinomialNB | 0.9594519942547785| 0.8859920459566947 | 0.9983207266996299 |0.8891638677744388|
+| DecisionTreeClassifier | 0.9998895149707214 | 0.6451612903225806 |  0.8834249889891089 | 0.623210182075305 |
+| SVC | 0.9938128383604021 | 0.9151568714096332 | 0.9980114183367595 | 0.9042778858051971 |
+| MultinomialNB | 0.9594519942547785| 0.8859920459566947 | 0.9953598765259583 | 0.9058688350715928 |
 
-对word2vec建立的数据集进行训练时，由于batch_size调整较为困难，本文通过一定范围内加大epochs，可以优化text_cnn最终训练的结果。
+对word2vec建立的数据集进行训练时，由于batch_size调整较为困难，
+text_cnn训练时将epochs设为20, batch_size为128,同时为了防止过拟合，需要为text_cnn设置earlystoping，其参数为monitor='val_loss', patience=5, mode='min'。
 
 ##4 结果
 ###4.1 模型的评价与验证
-针对TF-IDF的传统机器学习模型中，通过原始的默认参数训练，以及借助于GridSearchCV挖掘最优参数，如下图所示，可以发现SVC的表现最好，符合SVC的特点，虽然训练时间较长，但是泛化能力强，能提供较高的准确率。SVC在初始模型以及优化后的模型中都表现最优，并且也在最后的测试中得到了体现，因此比较可靠。
+针对TF-IDF的传统机器学习模型中，通过原始的默认参数训练，以及借助于GridSearchCV挖掘最优参数，如下图所示，可以发现SVC的表现最好，符合SVC的特点，虽然训练时间较长，但是泛化能力强，在借助卡方检验优化TFIDF作输入的模型效果情况下，能提供较高的准确率。SVC在初始模型以及优化后的模型中都表现最优，并且也在最后的测试中得到了体现，因此比较可靠。
 
 ![](imgs/td_f_ml.png)
 
 
-如下图所示，针对word2vec的text_cnn模型，参考了Yoon Kim的model，并未有参数的较大改变，但是通过其训练过程可以发现是文件可靠的。
+如下图所示，针对word2vec的text_cnn模型，参考了Yoon Kim的model，并未有参数的较大改变，但是通过其训练过程可以发现是文件可靠的。由于其在epochs过多情况下，会出现模型优化停止，因此加入了EarlyStopping，提供训练效率。
 
 ![](imgs/text_cnn_f_ml.png)
 
 ###4.2 合理性分析
-SVC配合TF-IDF训练的过程中所表现出的训练时间长符合其特点，并且在传统模型中最优的准确率也符合其良好的泛化能力。并且SVC可以借助于GridSearchCV继续挖掘更有参数，优化模型。
+SVC配合TF-IDF训练的过程中所表现出的训练时间长符合其特点，并且在传统模型中最优的准确率也符合其良好的泛化能力。并且SVC可以借助于卡方检验chi2和GridSearchCV继续挖掘更有参数，优化模型。
 
 
 text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增加而增加，而0.919的准确率也体现出其较好的文本识别能力，符合cnn模型在文本识别上较高的准确率。
@@ -132,7 +159,8 @@ text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增�
 ##5 项目结论
 ###5.1 结果可视化
 
-![](imgs/td_ml_trainandtest.png)
+![](imgs/timeoftrainandpred.png)
+![](imgs/scoreoftrainandtest.png)
 
 如上图所示，为优化后传统机器学习模型对TF-IDF所表示的数据训练的过程和表现。SVC训练时间明显突出，但是准确率也是三个模型中最好的，因此在传统模型中应该选择SVC。
 
@@ -143,7 +171,7 @@ text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增�
 
 |  | SVC+TF-IDF | text_cnn+word2vec |
 | ------ | ------ | ------ |
-| 最终测试准确率| 0.8328465215082316 | 0.9194534627035205 |
+| 最终测试准确率| 0.8297928836962294 | 0.89437911653544 |
 说明了text_cnn+word2vec组合可以提供更高的准确率，并且在训练集合测试集上都表现较好，说明较为稳定可靠。
 
 ###5.2 对项目的思考
@@ -157,29 +185,35 @@ text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增�
 论述了SVC和text_cnn分别对于TF-IDF和word2vec的合理性，并通过最终的测试对比得出word2vec模型的确改善了文本识别能力。并通过训练和测试对比，发现其是可靠的。
 
 ###5.3 需要作出的改进
-本文中对传统机器学习模型优化时，借助于GridSearchCV，但所列的参数列表可能有限，并未覆盖到最优参数组合。可以增加参数组合继续优化。
+本文中对传统机器学习模型优化时，借助于GridSearchCV，但所列的参数列表可能有限，但在借助于卡方检验筛选重要特征的帮助下，仍然使得原有的机器学习模型得到了改善，未来可以继续参数组合继续优化。
 
 本文中在对别词袋模型和词向量模型时，借助了不同的机器学习模型进行验证，但其实未能规避机器学习模型带来的影响，实验结果并不一定准确。可以寻找机器学习模型能够同时兼容两个文本表示模型的方法。
 
 ##6 参考文献
-[1]	 https://zh.wikipedia.org/wiki/自然语言处理
+[1]	 Silva, N. L. P., & Dessen, M. A. (2003). Crianças com síndrome de Down e suas interações familiares. Psicologia: reflexão e crítica, 16(3), 503-514.
 
-[2]	 https://github.com/nd009/capstone/tree/master/document_classification
+[2] Filliat, D. (2007, April). A visual bag of words method for interactive qualitative localization and mapping. In Robotics and Automation, 2007 IEEE International Conference on (pp. 3921-3926). IEEE.
 
-[3]	 http://www.qwone.com/~jason/20Newsgroups/
+[3] Hyperparameter, A. Hyperopt-Sklearn.
 
-[4] http://mattmahoney.net/dc/text8.zip
-<!--[4] https://link.springer.com/chapter/10.1007/978-3-319-25207-0_14-->
-[5] http://www.cnblogs.com/platero/archive/2012/12/03/2800251.html
+[4] Rengasamy, V., Fu, T. Y., Lee, W. C., & Madduri, K. (2017, November). Optimizing Word2Vec Performance on Multicore Systems. In Proceedings of the Seventh Workshop on Irregular Applications: Architectures and Algorithms (p. 3). ACM.
 
-[6] https://radimrehurek.com/gensim/models/word2vec.html
+[5] Li, T., Mei, T., Kweon, I. S., & Hua, X. S. (2011). Contextual bag-of-words for visual categorization. IEEE Transactions on Circuits and Systems for Video Technology, 21(4), 381-392.
+
+[6] Goldberg, Y., & Levy, O. (2014). word2vec Explained: deriving Mikolov et al.'s negative-sampling word-embedding method. arXiv preprint arXiv:1402.3722.
+
+[7] Ramos, J. (2003, December). Using tf-idf to determine word relevance in document queries. In Proceedings of the first instructional conference on machine learning (Vol. 242, pp. 133-142).
+
+[8] 理解 Word2Vec 之 Skip-Gram 模型, 天雨粟, https://zhuanlan.zhihu.com/p/27234078
+
+[9] Kim, Y. (2014). Convolutional neural networks for sentence classification. arXiv preprint arXiv:1408.5882.
+
+[10] Understanding Convolutional Neural Networks for NLP, WILDML, http://www.wildml.com/2015/11/understanding-convolutional-neural-networks-for-nlp/
+
+[1] Wang, S., & Manning, C. D. (2012, July). Baselines and bigrams: Simple, good sentiment and topic classification. In Proceedings of the 50th Annual Meeting of the Association for Computational Linguistics: Short Papers-Volume 2 (pp. 90-94). Association for Computational Linguistics.
 
 
-[7] https://baike.baidu.com/item/tf-idf/8816134?fr=aladdin
 
-[8] https://arxiv.org/abs/1408.5882
-
-[9] https://dl.acm.org/citation.cfm?id=2390688
 
 
 
