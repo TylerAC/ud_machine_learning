@@ -111,7 +111,7 @@ text-cnn模型<sup>[10]</sup>是利用卷积神经网络对文本进行分类的
 ###3.2 执行过程
 执行过程中主要需要:
 
-1）通过sklearn中LogisticRegression，SVC和MultinomialNB分别对TF-IDF建立表示的数据集进行训练，其中LogisticRegression设置"C=0"，其余为默认值，SVC设置'kernel'为'linear'，“random_state=0”，并且“gamma=0.9”，而MultinomialNB则设置alpha=0.01。训练时需要将训练集，验证集和测试集分开处理，并记录结果，如下图所示。
+1）通过sklearn中LogisticRegression，SVC和MultinomialNB分别对TF-IDF建立表示的数据集进行训练，其中LogisticRegression置"C=0"和'penalty'='l2'，这是为了防止LogisticRegression过拟合。SVC设置'kernel'为'linear'，“random_state=0”，并且“gamma=0.9”，而MultinomialNB则设置alpha=0.5。训练时需要将训练集，验证集和测试集分开处理，并记录结果，如下图所示。
 
 ![](imgs/td_rt.png)
 
@@ -126,15 +126,14 @@ text_cnn训练时选择epochs为15，batch_size为128。
 ###3.3 完善
 在进行对TF-IDF建立的数据集训练时，本文先借助机器学习默认参数对数据集进行训练，然后借助与GridSearchCV进行参数优化。
 
-优化后LogisticRegression的参数设置'C'为3；SVC的参数为kernel是‘linear’，同时设置'C'为 3, 'gamma'为 0.5；MultinomialNB的参数为alpha是0.0001。
-
+优化后LogisticRegression的参数设置'C'为3, 'penalty'='l2'；SVC的参数为kernel是‘linear’，同时设置'C'为 3, 'gamma'为 0.5；MultinomialNB的参数为alpha是0.01。除了LogisticRegression设置'penalty'='l2'外，SVC和在进行GridSearchCV优化时，也会适当降低C值，MultinomialNB提供更多alpha组合，这是为了防止机器模型学习时过拟合。
 如下图所示，三个传统机器学习模型在tf-idf加权下，经过GridSearchCV优化，训练和验证准确率都得到了提高。
 
 | 模型 | 优化前训练acc| 优化前验证acc | 优化后训练acc | 优化后验证acc |
 | ------  | ------ | ------ | ------ | ------ |
 | LogisticRegression | 0.9731521378853165 | 0.8939460892620416 |  0.9928405096358816 | 0.9025101643980908 |
 | SVC | 0.9821014252568777 | 0.9036676977463544 | 0.9992486986939868 | 0.9065759236344352 |
-| MultinomialNB | 0.9594519942547785| 0.8859920459566947 | 0.9983207266996299 | 0.8891638677744388 |
+| MultinomialNB | 0.9707214672411888 | 0.8912947414935926 | 0.9966856679281539 | 0.9053385186494608 |
 
 对word2vec建立的数据集进行训练时，由于batch_size调整较为困难，
 text_cnn训练时将epochs设为60, batch_size为50, batch_size较小是为了快速迭代，epochs为60 是为了保证text_cnn模型能充分拟合，同时为了防止过拟合，需要为text_cnn设置earlystoping，其参数为monitor='val_acc', patience=3, mode='max'，这样可以实现出现过拟合时，提前停止。
@@ -151,10 +150,10 @@ text_cnn训练时将epochs设为60, batch_size为50, batch_size较小是为了�
 ![](imgs/text_cnn_f_ml.png)
 
 ###4.2 合理性分析
-SVC配合TF-IDF训练的过程中所表现出的训练时间长符合其特点，并且在传统模型中最优的准确率也符合其良好的泛化能力。并且SVC可以借助于卡方检验chi2和GridSearchCV继续挖掘更有参数，优化模型。
+logistic回归模型、支持矢量机(SVM)模型、朴素贝叶斯模型在对TF-IDF建立的数据集训练时，经过GridSearchCV优化，表现良好。logistic回归模型计算代价低，准确率较高。VC配合TF-IDF训练的过程中所表现出的训练时间长符合其特点，并且在传统模型中最优的准确率也符合其良好的泛化能力。朴素贝叶斯模型对较大数据集时训练表现较好。
 
 
-text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增加而增加，而0.919的准确率也体现出其较好的文本识别能力，符合cnn模型在文本识别上较高的准确率。
+text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增加而增加，测试时只有0.727的准确率，是由于容易出现过拟合问题，对一定数据集训练后，text_cnn模型便会出现验证准确率上升缓慢。
 
 ##5 项目结论
 ###5.1 结果可视化
@@ -169,9 +168,7 @@ text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增�
 
 如上图所示，为text_cnn对word2vec所表示的数据训练的过程和表现。可以看到模型随着epochs在训练集上准确率会越来越高，但是在15以后都是略微增长，为了防止过拟合，在28步通过EarlyStopping提前终止了训练。
 
-| | LogisticRegression+TF-IDF|  SVC+TF-IDF| NaiveBayes+TF-IDF | text_cnn+word2vec |
-| ------ |------ |------ | ------ | ------ |
-| 最终测试准确率| 0.8410780669144982 | 0.8328465215082316 | 0.8096123207647371 | 0.7272968681898132 |
+![](imgs/accs.png)
 由上表可见，LogisticRegression+TF-IDF在准确率上表现最好，同时期训练时间也较短，效果较好，并且在训练集合测试集上都表现较好，说明较为稳定可靠。而text_cnn+word2vec没有表现传统机器学习模型组合表现的好，说明并不足以解决文章的表达问题，还需要改善。
 
 ###5.2 对项目的思考
@@ -187,7 +184,9 @@ text_cnn配合word2vec所表现出的准确率一定范围内会随着epochs增�
 ###5.3 需要作出的改进
 本文中对传统机器学习模型优化时，借助于GridSearchCV，使logistic回归模型、支持矢量机(SVM)模型、朴素贝叶斯模型表现良好，但GridSearchCV中所列的参数组合有限，并不一定最优，未来可以继续对参数组合进行优化。
 
-本文中在对别词袋模型和词向量模型时，借助了不同的机器学习模型进行验证，但其实未能规避机器学习模型带来的影响，实验结果并不一定准确。需要继续解决text_cnn容易过拟合问题，提高其测试的准确率。
+另外，本文已经对logistic回归模型设置'penalty'='l2',并对SVC提供更多的C较小值选项，并为MultinomialNB提供很多alpha选项，但是仍然存在过拟合情况，需要继续改善。
+
+本文中在text_cnn在处理word2vec数据集时，出现了容易过拟合问题，需要解决。除了本文中尝试的EarlyStopping外，还可以尝试减小Dropout rate，调整weight decay和卷积层深度来优化。
 
 ##6 参考文献
 [1]	 Silva, N. L. P., & Dessen, M. A. (2003). Crianças com síndrome de Down e suas interações familiares. Psicologia: reflexão e crítica, 16(3), 503-514.
